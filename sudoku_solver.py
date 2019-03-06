@@ -13,15 +13,15 @@ import numpy as np
 
 #Input sudoku, can be found at following link: https://www.websudoku.com/?level=1&set_id=3126256010
 
-sudo = np.array([[0, 0, 5, 7, 9, 3, 0, 4, 6],
-         [0, 1, 0, 2, 8, 0, 0, 5, 0], 
-         [0, 0, 0, 5, 0, 4, 0, 2, 8],
-         [0, 4, 0, 8, 5, 0, 0, 0, 0],     
-         [0, 6, 0, 0, 0, 2, 4, 9, 0],
-         [0, 0, 0, 4, 0, 7, 8, 1, 0],
-         [0, 9, 6, 0, 4, 5, 0, 8, 0],      
-         [0, 0, 4, 0, 0, 0, 9, 7, 0],
-         [3, 0, 1, 9, 0, 8, 0, 0, 4]])
+sudo = np.array([[0, 0, 1, 0, 2, 0, 9, 0, 0],
+         [0, 0, 0, 4, 0, 6, 0, 7, 0], 
+         [0, 0, 4, 7, 0, 1, 6, 0, 0],
+         [5, 9, 0, 0, 0, 0, 3, 0, 7],     
+         [4, 0, 0, 0, 0, 0, 0, 0, 8],
+         [1, 0, 6, 0, 0, 0, 0, 4, 9],
+         [0, 0, 7, 1, 0, 9, 8, 0, 0],      
+         [0, 1, 0, 3, 0, 2, 0, 0, 0],
+         [0, 0, 2, 0, 6, 0, 7, 0, 0]]) 
 
 
 class cell:
@@ -133,88 +133,109 @@ class cell:
             return cell_value       
 
 
-##First Lyer of Logic
-#Iterate over the simple solver until either sudoku is complete or
-#there is no change from the previous iteration and another method is needed to solve
-options_list = []
-
-while 0 in sudo:
-#Iterate over cells and find possible values
-#If only one possible value then place into sudo
-    change_count = 0
-    dict_index = 0
+def simple_solver(sudo = sudo):
+    ##First Lyer of Logic
+    #Iterate over the simple solver until either sudoku is complete or
+    #there is no change from the previous iteration and another method is needed to solve
+    options_list = []
     cell_dict = {}
-    for r in range (0,9):           
-        for c in range (0,9):
-            
-            cell_dict[dict_index] = cell(r,c)
-            dict_index += 1
-            if cell_dict[dict_index-1].isempty() == False:                  #Check if cell solved, if so add cell value to options list
-                options_list.append([sudo[r,c]])                            
-            elif cell_dict[dict_index-1].isempty() == True:
-                nums_available = cell_dict[dict_index-1].get_avail_nums(sudo)
-               
-                if len(nums_available) == 1:                
-                    sudo[r,c] = nums_available[0]
-                    change_count += 1
-                options_list.append(nums_available)
-
-    if change_count == 0:
-        print(sudo)
-        print('More trickery is needed to solve this one...')
-        break
-
-print(sudo)
-
-#Second layer of logic
-#finds whether any of a cells possibilities are unique in it's row, col or box
-while 0 in sudo:
-    
-    change_count = 0
-    for i in range(0,81):
-        if len(cell_dict[i].get_avail_nums(sudo)) != 1:             #if length of nums available is not 1 then the cell must be solved 
-    
-            cell_options = cell_dict[i].get_avail_nums(sudo)        #get options for the cell
-            row_options = []                                #empty array for all the other options in the row
-            col_options = []                                #empty array for all the other options in the col
-            box_options = []                                #empty array for all the other options in the box
-            row = cell_dict[i].r
-            col = cell_dict[i].c
-            box = cell_dict[i].get_box_loc()
-            for ii in range(0,81):                     #get other options in the row, col and box in separate arrays
-               
-                if ii != i:                              #dont want to add cell we are trying to solve into other options
-                    if cell_dict[ii].r == row:
-                        row_options.append(cell_dict[ii].get_avail_nums(sudo))
-                    if cell_dict[ii].c == col:
-                        col_options.append(cell_dict[ii].get_avail_nums(sudo))
-                    if cell_dict[ii].get_box_loc() == box:
-                        col_options.append(cell_dict[ii].get_avail_nums(sudo))
-                    
-            row_diff = set(cell_options) - set([item for sublist in row_options for item in sublist])
-            col_diff = set(cell_options) - set([item for sublist in col_options for item in sublist])
-            box_diff = set(cell_options) - set([item for sublist in box_options for item in sublist])
-            
-            if len(row_diff) == 1:
-                x = list(row_diff)[0]
-                sudo[row,col] = x
-                change_count =+ 1
-            elif len(col_diff) == 1:
-                x = list(col_diff)[0]
-                sudo[row,col] = x
-                change_count =+ 1
-            elif len(box_diff) == 1:
-                x = list(box_diff)[0]
-                sudo[row,col] = x
-                change_count =+ 1
-
-    if change_count == 0:
-        print(sudo)
-        print('This is going to require taking a guess')
-        break
-
-print(sudo)
+    while 0 in sudo:
+    #Iterate over cells and find possible values
+    #If only one possible value then place into sudo
+        change_count = 0
+        dict_index = 0
         
+        for r in range (0,9):           
+            for c in range (0,9):
+                
+                cell_dict[dict_index] = cell(r,c)
+                dict_index += 1
+                if cell_dict[dict_index-1].isempty() == False:                  #Check if cell solved, if so add cell value to options list
+                    options_list.append([sudo[r,c]])                            
+                elif cell_dict[dict_index-1].isempty() == True:
+                    nums_available = cell_dict[dict_index-1].get_avail_nums(sudo)
+                
+                    if len(nums_available) == 1:                
+                        sudo[r,c] = nums_available[0]
+                        change_count += 1
+                    options_list.append(nums_available)
+
+        if change_count == 0:
+            print(sudo)
+            print('More trickery is needed to solve this one...')
+            break
+    output_dict = {'cell_dict':cell_dict,'sudo':sudo}
+    return output_dict
+
+def unique_poss_solver(cell_dict, sudo = sudo): 
+    while 0 in sudo:
+    
+        change_count = 0
+        for i in range(0,81):
+            if len(cell_dict[i].get_avail_nums(sudo)) != 1:             #if length of nums available is not 1 then the cell must be solved 
+        
+                cell_options = cell_dict[i].get_avail_nums(sudo)        #get options for the cell
+                row_options = []                                #empty array for all the other options in the row
+                col_options = []                                #empty array for all the other options in the col
+                box_options = []                                #empty array for all the other options in the box
+                row = cell_dict[i].r
+                col = cell_dict[i].c
+                box = cell_dict[i].get_box_loc()
+                for ii in range(0,81):                     #get other options in the row, col and box in separate arrays
+                
+                    if ii != i:                              #dont want to add cell we are trying to solve into other options
+                        if cell_dict[ii].r == row:
+                            row_options.append(cell_dict[ii].get_avail_nums(sudo))
+                        if cell_dict[ii].c == col:
+                            col_options.append(cell_dict[ii].get_avail_nums(sudo))
+                        if cell_dict[ii].get_box_loc() == box:
+                            col_options.append(cell_dict[ii].get_avail_nums(sudo))
+                        
+                row_diff = set(cell_options) - set([item for sublist in row_options for item in sublist])       #finds if there is a unique solution to cell in row
+                col_diff = set(cell_options) - set([item for sublist in col_options for item in sublist])       #finds if there is a unique solution to cell in column
+                box_diff = set(cell_options) - set([item for sublist in box_options for item in sublist])       #finds if there is a unique solution to cell in box
+                
+                if len(row_diff) == 1:
+                    x = list(row_diff)[0]
+                    sudo[row,col] = x
+                    change_count =+ 1
+                elif len(col_diff) == 1:
+                    x = list(col_diff)[0]
+                    sudo[row,col] = x
+                    change_count =+ 1
+                elif len(box_diff) == 1:
+                    x = list(box_diff)[0]
+                    sudo[row,col] = x
+                    change_count =+ 1
+
+        if change_count == 0:
+            print('This is going to require taking a guess')
+            print(sudo)
+            break
+    return sudo
+
+
+output_dict = simple_solver(sudo)
+cell_dict = output_dict['cell_dict']
+sudo = output_dict['sudo']
+sudo = unique_poss_solver(cell_dict,sudo)
+output_dict = simple_solver(sudo)
+cell_dict = output_dict['cell_dict']
+sudo = output_dict['sudo']
+sudo = unique_poss_solver(cell_dict,sudo)
+# output_dict = simple_solver(sudo)
+# cell_dict = output_dict['cell_dict']
+# sudo = output_dict['sudo']
+print('latest:')
+print(sudo)
+
+
+
+
+
+
+
+
 
         
 

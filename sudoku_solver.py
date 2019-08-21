@@ -2,7 +2,7 @@
 #About this file:
 
 # Currently first layer of logic solves easy problems 
-#Second layer of logic solves some additional cells that the first could not
+# Second layer of logic solves some additional cells that the first could not
 # Input is a 9x9 array representing the sudoku puzzle with 0 representing blank spaces
 # Future work will be to have image input instad of manual
 
@@ -10,18 +10,17 @@
 
 import numpy as np
 
-
 #Input sudoku, can be found at following link: https://www.websudoku.com/?level=1&set_id=3126256010
 
-sudo = np.array([[0, 0, 1, 0, 2, 0, 9, 0, 0],
-         [0, 0, 0, 4, 0, 6, 0, 7, 0], 
-         [0, 0, 4, 7, 0, 1, 6, 0, 0],
-         [5, 9, 0, 0, 0, 0, 3, 0, 7],     
-         [4, 0, 0, 0, 0, 0, 0, 0, 8],
-         [1, 0, 6, 0, 0, 0, 0, 4, 9],
-         [0, 0, 7, 1, 0, 9, 8, 0, 0],      
-         [0, 1, 0, 3, 0, 2, 0, 0, 0],
-         [0, 0, 2, 0, 6, 0, 7, 0, 0]]) 
+sudo = np.array([[2, 0, 1, 5, 0, 6, 0, 0 ,0],
+         [8, 0, 0, 2, 0, 0, 5, 0, 1], 
+         [0, 0, 5, 8, 0, 0, 0, 7, 0],
+         [7, 0, 0, 0, 8, 0, 0, 3, 9],     
+         [0, 0, 9, 3, 6, 4, 7, 0, 0],
+         [5, 8, 0, 0, 2, 0, 0, 0, 6],
+         [0, 1, 0, 0, 0, 9, 3, 0 ,0],      
+         [3, 0, 4, 0, 0, 2, 0, 0, 5],
+         [0, 0, 0, 4, 0, 8, 1, 0, 7]])  
 
 #Define the cell windows
 first_win = [0, 1, 2]
@@ -46,8 +45,7 @@ class cell:
     
     #Method to determine which box number the cell is in
     def get_box_loc(self):
-        multiplyer = self.r // 3
-        row_start = multiplyer * 3
+        row_start = (self.r // 3) * 3
         # Add the box column index to the box row start index to get the box loc
         self.box = row_start + self.c // 3 + 1
     
@@ -55,34 +53,15 @@ class cell:
    
     #Method to return the 3x3 box the cell is in
     def get_box_values(self, sudo = sudo):
-        r = self.r
-        c = self.c
 
-        if r == 0 or r == 1 or r == 2:
-            if c == 0 or c == 1 or c == 2:
-                return sudo[0:3, 0:3]
-            elif c == 3 or c == 4 or c == 5:
-                return sudo[0:3, 3:6]
-            elif c == 6 or c == 7 or c == 8:
-                return sudo[0:3, 6:9]
-    
-        elif r == 3 or r == 4 or r == 5:
-            if c == 0 or c == 1 or c == 2:
-                return sudo[3:6, 0:3]
-            elif c == 3 or c == 4 or c == 5:
-                return sudo[3:6, 3:6]
-            elif c == 6 or c == 7 or c == 8:
-                return sudo[3:6, 6:9]
-        
-        elif r == 6 or r == 7 or r == 8:
-            if c == 0 or c == 1 or c == 2:
-                return sudo[6:9, 0:3]
-            elif c == 3 or c == 4 or c == 5:
-                return sudo[6:9, 3:6]
-            elif c == 6 or c == 7 or c == 8:
-                return sudo[6:9, 6:9]
+        row_start = (self.r // 3) * 3
+        row_end = row_start + 3
+        col_start = (self.c // 3) * 3
+        col_end = col_start + 3
 
-        #Method to determine numbers cell can not take as they are used in the row, column or box
+        return sudo[row_start:row_end, col_start:col_end]
+
+    #Method to determine numbers cell can not take as they are used in the row, column or box
     def taken_nums(self,sudo = sudo):
         used_nums = []
         box = self.get_box_values(sudo)

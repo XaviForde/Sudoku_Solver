@@ -23,8 +23,13 @@ sudo = np.array([[0, 0, 1, 0, 2, 0, 9, 0, 0],
          [0, 1, 0, 3, 0, 2, 0, 0, 0],
          [0, 0, 2, 0, 6, 0, 7, 0, 0]]) 
 
+#Define the cell windows
+first_win = [0, 1, 2]
+second_win = [3, 4, 5]
+third_win = [6, 7, 8]
 
 class cell:
+
     def __init__(self, r, c, sudo = sudo):
         self.r = r
         self.c = c
@@ -33,7 +38,7 @@ class cell:
         self.value = sudo[r,c]
     
     #Method to determine if the cell has a number assigned
-    def isempty(self,sudo = sudo):
+    def isEmpty(self,sudo = sudo):
         if sudo[self.r,self.c] == 0:
             return True
         else:
@@ -41,34 +46,12 @@ class cell:
     
     #Method to determine which box number the cell is in
     def get_box_loc(self):
-        r = self.r
-        c = self.c
-
-        if r == 0 or r == 1 or r == 2:
-            if c == 0 or c == 1 or c == 2:
-                self.box = 1
-            elif c == 3 or c == 4 or c == 5:
-                self.box = 2
-            elif c == 6 or c == 7 or c == 8:
-                self.box = 3
+        multiplyer = self.r // 3
+        row_start = multiplyer * 3
+        # Add the box column index to the box row start index to get the box loc
+        self.box = row_start + self.c // 3 + 1
     
-        elif r == 3 or r == 4 or r == 5:
-            if c == 0 or c == 1 or c == 2:
-                self.box = 4
-            elif c == 3 or c == 4 or c == 5:
-                self.box = 5
-            elif c == 6 or c == 7 or c == 8:
-                self.box = 6
-        
-        elif r == 6 or r == 7 or r == 8:
-            if c == 0 or c == 1 or c == 2:
-                self.box = 7
-            elif c == 3 or c == 4 or c == 5:
-                self.box = 8
-            elif c == 6 or c == 7 or c == 8:
-                self.box = 9
-        box_num = self.box
-        return box_num
+        return self.box
    
     #Method to return the 3x3 box the cell is in
     def get_box_values(self, sudo = sudo):
@@ -150,9 +133,9 @@ def simple_solver(sudo = sudo):
                 
                 cell_dict[dict_index] = cell(r,c)
                 dict_index += 1
-                if cell_dict[dict_index-1].isempty() == False:                  #Check if cell solved, if so add cell value to options list
+                if cell_dict[dict_index-1].isEmpty() == False:                  #Check if cell solved, if so add cell value to options list
                     options_list.append([sudo[r,c]])                            
-                elif cell_dict[dict_index-1].isempty() == True:
+                elif cell_dict[dict_index-1].isEmpty() == True:
                     nums_available = cell_dict[dict_index-1].get_avail_nums(sudo)
                 
                     if len(nums_available) == 1:                
@@ -228,14 +211,3 @@ sudo = unique_poss_solver(cell_dict,sudo)
 # sudo = output_dict['sudo']
 print('latest:')
 print(sudo)
-
-
-
-
-
-
-
-
-
-        
-

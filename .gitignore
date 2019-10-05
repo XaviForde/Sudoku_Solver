@@ -1,0 +1,16 @@
+__init__.py
+__pycache__/
+DetectDigits.py
+DetectDigits28.py
+DetectDigits8.py
+FindSudoFromVideo.py
+LiveVideo.py
+LiveVideoTransform.py
+digit28_model.pkl
+digit28_knn.pkl
+mnist_test.csv
+mnist_train.csv
+sudoku.png
+sudoku2.png
+sudoku3.png
+scrap.py

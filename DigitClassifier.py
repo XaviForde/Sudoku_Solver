@@ -2,15 +2,14 @@ import numpy as np
 import math
 from scipy import stats
 import cv2
-import pandas as pd
 from sklearn import datasets, svm, metrics
 from sklearn.neighbors import KNeighborsClassifier
-import matplotlib.pyplot as plt
+# import matplotlib.pyplot as plt -- not needed now working
 import joblib
 import SudoFromVideo as vid
 import sudoku_solver as solver
 
-    #Create the SVC digit classifier
+#Create the SVC digit classifier
 def CreateTrainSaveClassifier():
     # Load the digits dataset: digits
     digits = datasets.load_digits()
@@ -226,7 +225,7 @@ while True:
     #print(sudo_out)
 
     #Solve the sudoku
-    sudo_solved = solver.SolveSudoku(sudo_out.copy())
+    sudo_solved = solver.solve(sudo_out.copy())
 
     solvedImg = dispSolution(sudo_out.copy(), sudo_solved, np.array(sudoImages[:,:,-1], dtype='uint8'), w_cell=40)
 
@@ -237,7 +236,7 @@ while True:
         key = cv2.waitKey(0)
 
     #print('Solved Sudoku:')
-    #print(sudo_solved)
+    print(sudo_solved)
 
 
 

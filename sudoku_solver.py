@@ -12,24 +12,24 @@ import numpy as np
 
 #Input sudoku, can be found at following link: https://www.websudoku.com/?level=1&set_id=3126256010
 
-sudo = np.array([[2, 0, 1, 5, 0, 6, 0, 0 ,0],
-         [8, 0, 0, 2, 0, 0, 5, 0, 1], 
-         [0, 0, 5, 8, 0, 0, 0, 7, 0],
-         [7, 0, 0, 0, 8, 0, 0, 3, 9],     
-         [0, 0, 9, 3, 6, 4, 7, 0, 0],
-         [5, 8, 0, 0, 2, 0, 0, 0, 6],
-         [0, 1, 0, 0, 0, 9, 3, 0 ,0],      
-         [3, 0, 4, 0, 0, 2, 0, 0, 5],
-         [0, 0, 0, 4, 0, 8, 1, 0, 7]])  
+# sudo = np.array([[2, 0, 1, 5, 0, 6, 0, 0 ,0],
+#          [8, 0, 0, 2, 0, 0, 5, 0, 1], 
+#          [0, 0, 5, 8, 0, 0, 0, 7, 0],
+#          [7, 0, 0, 0, 8, 0, 0, 3, 9],     
+#          [0, 0, 9, 3, 6, 4, 7, 0, 0],
+#          [5, 8, 0, 0, 2, 0, 0, 0, 6],
+#          [0, 1, 0, 0, 0, 9, 3, 0 ,0],      
+#          [3, 0, 4, 0, 0, 2, 0, 0, 5],
+#          [0, 0, 0, 4, 0, 8, 1, 0, 7]])  
 
-#Define the cell windows
-first_win = [0, 1, 2]
-second_win = [3, 4, 5]
-third_win = [6, 7, 8]
+# #Define the cell windows
+# first_win = [0, 1, 2]
+# second_win = [3, 4, 5]
+# third_win = [6, 7, 8]
 
 class cell:
 
-    def __init__(self, r, c, sudo = sudo):
+    def __init__(self, r, c, sudo):
         self.r = r
         self.c = c
         self.row = set(sudo[r,:])
@@ -37,7 +37,7 @@ class cell:
         self.value = sudo[r,c]
     
     #Method to determine if the cell has a number assigned
-    def isEmpty(self,sudo = sudo):
+    def isEmpty(self,sudo):
         if sudo[self.r,self.c] == 0:
             return True
         else:
@@ -52,7 +52,7 @@ class cell:
         return self.box
    
     #Method to return the 3x3 box the cell is in
-    def get_box_values(self, sudo = sudo):
+    def get_box_values(self, sudo):
 
         row_start = (self.r // 3) * 3
         row_end = row_start + 3
@@ -62,7 +62,7 @@ class cell:
         return sudo[row_start:row_end, col_start:col_end]
 
     #Method to determine numbers cell can not take as they are used in the row, column or box
-    def taken_nums(self,sudo = sudo):
+    def taken_nums(self,sudo):
         used_nums = []
         box = self.get_box_values(sudo)
         for num in range(1,10):
@@ -79,7 +79,7 @@ class cell:
         self.used_nums = used_nums
         return used_nums
 
-    def get_avail_nums(self,sudo = sudo):
+    def get_avail_nums(self,sudo):
         if sudo[self.r, self.c] == 0:
             nums_used = set(self.taken_nums(sudo))
             nums_available = []
@@ -95,7 +95,7 @@ class cell:
             return cell_value       
 
 
-def simple_solver(sudo = sudo):
+def simple_solver(sudo):
     ##First Lyer of Logic
     #Iterate over the simple solver until either sudoku is complete or
     #there is no change from the previous iteration and another method is needed to solve
@@ -110,11 +110,11 @@ def simple_solver(sudo = sudo):
         for r in range (0,9):           
             for c in range (0,9):
                 
-                cell_dict[dict_index] = cell(r,c)
+                cell_dict[dict_index] = cell(r,c, sudo)
                 dict_index += 1
-                if cell_dict[dict_index-1].isEmpty() == False:                  #Check if cell solved, if so add cell value to options list
+                if cell_dict[dict_index-1].isEmpty(sudo) == False:                  #Check if cell solved, if so add cell value to options list
                     options_list.append([sudo[r,c]])                            
-                elif cell_dict[dict_index-1].isEmpty() == True:
+                elif cell_dict[dict_index-1].isEmpty(sudo) == True:
                     nums_available = cell_dict[dict_index-1].get_avail_nums(sudo)
                 
                     if len(nums_available) == 1:                
@@ -126,10 +126,10 @@ def simple_solver(sudo = sudo):
             print(sudo)
             print('More trickery is needed to solve this one...')
             break
-    output_dict = {'cell_dict':cell_dict,'sudo':sudo}
-    return output_dict
+    
+    return cell_dict, sudo
 
-def unique_poss_solver(cell_dict, sudo = sudo): 
+def unique_poss_solver(cell_dict, sudo): 
     while 0 in sudo:
     
         change_count = 0
@@ -176,17 +176,11 @@ def unique_poss_solver(cell_dict, sudo = sudo):
             break
     return sudo
 
+def solve(sudo):
 
-output_dict = simple_solver(sudo)
-cell_dict = output_dict['cell_dict']
-sudo = output_dict['sudo']
-sudo = unique_poss_solver(cell_dict,sudo)
-output_dict = simple_solver(sudo)
-cell_dict = output_dict['cell_dict']
-sudo = output_dict['sudo']
-sudo = unique_poss_solver(cell_dict,sudo)
-# output_dict = simple_solver(sudo)
-# cell_dict = output_dict['cell_dict']
-# sudo = output_dict['sudo']
-print('latest:')
-print(sudo)
+    cell_dict, sudo = simple_solver(sudo)
+    sudo = unique_poss_solver(cell_dict,sudo)
+    cell_dict, sudo = simple_solver(sudo)
+    sudo = unique_poss_solver(cell_dict,sudo)
+    
+    return sudo

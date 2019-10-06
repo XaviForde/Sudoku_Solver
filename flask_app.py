@@ -1,90 +1,86 @@
 ''' Flask app to run the sudoku solver on Azure Web Apps'''
 
-from flask import Flask, make_response
-
+# Currently used imports
+from flask import Flask, make_response, render_template, Response
+from imutils.video import VideoStream
+import threading
+import imutils
 import numpy as np
 import cv2
 import time
 import transform as tf 
 
+# initialize the output frame and a lock used to ensure thread-safe
+# exchanges of the output frames (useful when multiple browsers/tabs
+# are viewing the stream)
+outputFrame = None
+lock = threading.Lock()
 
+# Instantiate app
 app = Flask(__name__)
 
+# Initialise the video stream and give camera time to warm up
+vs = VideoStream(src=0).start()
+time.sleep(2.0)
+
 @app.route("/")
-def hello2():
-    return "Hello, sir" #, hello()
+def index():
+	# return the rendered template
+	return render_template("index.html")
 
-'''
-def gen(camera):
-    while True:
-        frame = camera.get_frame()
-        yield (b'--frame\r\n'
-               b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
 
-#@app.route("/")
-def hello():
-    # Create video object to read frames from
-    cap = cv2.VideoCapture(0)
+def get_frame():
+	# grab global references to the video stream, output frame, and
+	# lock variables
+	global vs, outputFrame, lock
 
-    time_start = time.time()
+	while True:
+		frame = vs.read()
+		frame = imutils.resize(frame, width=400)
+	
+		# acquire the lock, set the output frame, and release the
+		# lock
+		with lock:
+			outputFrame = frame.copy()
 
-    while time.time() - time_start < 30:
+def generate():
+	# grab global references to the output frame and lock variables
+	global outputFrame, lock
+
+	# loop over frames from the output stream
+	while True:
+		# wait until the lock is acquired
+		with lock:
+			# check if the output frame is available, otherwise skip
+			# the iteration of the loop
+			if outputFrame is None:
+				continue
+
+			# encode the frame in JPEG format
+			(flag, encodedImage) = cv2.imencode(".jpg", outputFrame)
+
+			# ensure the frame was successfully encoded
+			if not flag:
+				continue
+
+		# yield the output frame in the byte format
+		yield(b'--frame\r\n' b'Content-Type: image/jpeg\r\n\r\n' + 
+			bytearray(encodedImage) + b'\r\n')
+
+@app.route("/video_feed")
+def video_feed():
+	# return the response generated along with the specific media
+	# type (mime type)
+	return Response(generate(),
+		mimetype = "multipart/x-mixed-replace; boundary=frame")
         
-        #Read in frame from video object
-        ret, img = cap.read()
+if __name__ == "__main__":
+	
+	# start a thread that will perform video reading detection
+	# t = threading.Thread(target=get_frame)
+	# t.daemon = True
+	# t.start()
 
-        #Convert to gray, used for final output
-        imgGray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY) 
-        cv2.imshow('Gray', imgGray)
-        #Pre process image:
-        imgBlur = cv2.GaussianBlur(img,(3,3),0)       #Apply blur
-        imgBlurGray = cv2.cvtColor(imgBlur, cv2.COLOR_BGR2GRAY)     #Convert blurred image to gray
+    app.run(debug=True, threaded=True, use_reloader=False)
 
-        #Find edges 
-        edges = cv2.Canny(imgBlurGray,0,100,apertureSize = 3)  #Fin
-
-        #Find largest contour from the egdes, assumed this is the outer sudoku box
-        mask = cv2.inRange(edges, 254,255)
-        _,contours,_ = cv2.findContours(mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
-        outer_box = max(contours, key = cv2.contourArea)
-
-        peri = cv2.arcLength(outer_box, True)   #perimeter
-        approx = cv2.approxPolyDP(outer_box, 0.02 * peri, True) #approximate polygon of contour
-
-        if len(approx) == 4:
-
-            warped = tf.four_point_transform(imgGray.copy(), approx.reshape(4, 2))
-            #output = four_point_transform(image, displayCnt.reshape(4, 2))
-            # draw the book contour  and display to see if correct
-
-            #Isolate the sudoko puzzle
-            #output = imgGray[y:(y+h), x:(x+w)]
-
-            output = warped.copy()
-
-            w_cell = 40 #Width of each cell in the sudoku
-            output = cv2.resize(output, (9*w_cell+1,9*w_cell+1))
-
-            for row in range(0,9):
-                for col in range(0,9):
-                    x_start = 2+row*w_cell
-                    y_start = 2+col*w_cell
-                    x_end = x_start + w_cell - 4
-                    y_end = y_start + w_cell - 4
-                    cv2.rectangle(output, (x_start,y_start), (x_end, y_end), color=(255), thickness=1)
-
-
-            cv2.imshow('out', output)
-
-            #Quit when esc key is pressed:
-            key = cv2.waitKey(25)   #25
-            if key == 27:
-                cv2.imwrite('sudoku2.png', output)
-                break
-
-
-    #Release video capture / destroy open windows:
-    cap.release()
-    cv2.destroyAllWindows()
-    '''
-
+vs.stop()
